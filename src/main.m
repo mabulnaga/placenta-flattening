@@ -90,7 +90,7 @@ fprintf('Mapping MRI image to flattened space...\n');
 %save the mapped images as NIFTI files if NIFTI files were input to the
 %algorithm. Always saves outputs as matlab matrices.
 if(saveNifti==1)
-    fprintf('saving mapped image as a NIFTI file');
+    fprintf('saving mapped image as a NIFTI file \n');
     grayImageNifti = update_nifti(grayImageNifti, mappedImage);
     segMapped = logical(mappedImage);
     segImageNifti = update_nifti(grayImageNifti, segMapped);
