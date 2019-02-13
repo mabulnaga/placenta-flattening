@@ -28,6 +28,9 @@ lineSearchLim = 200;
 useRim = 1;
 
 %normalize and PCA
+if(size(X,2)>size(X,1))
+    X = X';
+end
 Xorig = X;
 meanX = mean(X);
 X = X - meanX;

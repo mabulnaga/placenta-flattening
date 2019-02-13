@@ -27,7 +27,11 @@ distTX_use = distTX(distTX>0);
 hist_95 = prctile(distTX_use,95);
 rz = hist_95;
 %Smooth the image
-binaryImg = imgaussfilt3(binaryImg,gaussSigma);
+try
+    binaryImg = imgaussfilt3(binaryImg,gaussSigma);
+catch
+        binaryImg = imgaussfilt3(uint8(binaryImg),gaussSigma);
+end
 %Create a mesh
 [node,elem,face] = create_mesh(binaryImg);
 V = elem(:,1:4);

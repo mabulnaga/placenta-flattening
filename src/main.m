@@ -47,6 +47,11 @@ else
     segmentationImage = preprocess_seg_holes(segmentationImage);
 end
 
+%Check if the image mask is binary
+if(length(unique(segmentationImage))>2)
+    error('must use a binary image mask')
+end
+
 %create a directory to save output files to
 currentDir = mfilename('fullpath');
 currentDir = fileparts(currentDir); currentDir = fileparts(currentDir);
