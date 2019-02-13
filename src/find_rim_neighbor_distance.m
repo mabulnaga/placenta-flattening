@@ -66,10 +66,10 @@ while(computeRim)
 %         computeRim=1;
 %         neighborDist = neighborDist + 0.5;
 %         warning('rim broken up (non conitnuous');
-    elseif(nNodes < 0.30) %probably should remove this condition!
-        computeRim = 1;
-        neighborDist = neighborDist+0.25;
-        warning('too few nodes <threshold %');
+%     elseif(nNodes < 0.30) %probably should remove this condition!
+%         computeRim = 1;
+%         neighborDist = neighborDist+0.25;
+%         warning('too few nodes <threshold %');
     else
         computeRim = 0;
     end
