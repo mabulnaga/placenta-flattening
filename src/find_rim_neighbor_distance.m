@@ -32,6 +32,7 @@ else %check if 0 or 1 inidices.
 end
 %Here, compute the rim, and then run some checks.
 computeRim = 1;
+count = 0;
 while(computeRim)
    Adist = zeros(size(A));
    for i = 1:length(A)
@@ -66,10 +67,14 @@ while(computeRim)
 %         computeRim=1;
 %         neighborDist = neighborDist + 0.5;
 %         warning('rim broken up (non conitnuous');
-%     elseif(nNodes < 0.30) %probably should remove this condition!
-%         computeRim = 1;
-%         neighborDist = neighborDist+0.25;
-%         warning('too few nodes <threshold %');
+    elseif(nNodes < 0.30) %probably should remove this condition!
+        if(count < 10)            
+            computeRim = 1;
+            neighborDist = neighborDist+0.25;
+            warning('too few nodes <threshold %');
+        else
+           computeRim = 0; 
+        end
     else
         computeRim = 0;
     end
@@ -77,6 +82,7 @@ while(computeRim)
        neighborDist = neighborDistO;
        addDist = 1;
     end
+    count = count + 1;
 end
 end
 
