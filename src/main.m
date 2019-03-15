@@ -90,14 +90,15 @@ save([savePath,'/mappedVolume'],'mappedVolume','-v7.3');
 fprintf('Mapping MRI image to flattened space...\n');
 
 %map the MRI intensity values to the flattened space
-[mappedImage, Tflat] = map_intensity_3d(grayImage, startVolume, mappedVolume);
+[mappedImage, Tflat] = map_intensity_3d(double(grayImage), startVolume, mappedVolume);
 
 %save the mapped images as NIFTI files if NIFTI files were input to the
 %algorithm. Always saves outputs as matlab matrices.
 if(saveNifti==1)
     fprintf('saving mapped image as a NIFTI file \n');
     grayImageNifti = update_nifti(grayImageNifti, mappedImage);
-    segMapped = logical(mappedImage);
+    segMapped = zeros(size(mappedImage)); 
+    segMapped(mappedImage > 0) = mappedImage(mappedImage>0);   
     segImageNifti = update_nifti(grayImageNifti, segMapped);
     saveNii(grayImageNifti, [savePath,'flat-MRI.nii']);
     saveNii(segImageNifti,[savePath,'flat-segmentation.nii']);
@@ -106,10 +107,11 @@ if(saveNifti==1)
 else
     fprintf('saving mapped image as a matlab matrix file');
     save([savePath,'flat-MRI.mat'],'mappedImage','-v7.3');
-    segMapped = logical(mappedImage);
+    segMapped = zeros(size(mappedImage)); 
+    segMapped(mappedImage > 0) = mappedImage(mappedImage>0);
     save([savePath,'flat-segmentation.mat'],'segMapped','-v7.3');
     niftiwrite(mappedImage,[savePath,'flat-MRI.nii']);
-    niftiwrite(logical(mappedImage),[savePath,'flat-segmentation.nii']);
+    niftiwrite(segMapped,[savePath,'flat-segmentation.nii']);
 end
 
 end
