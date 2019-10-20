@@ -17,5 +17,15 @@ main(grayImage, segImage): input a grayscale MRI image and the corresponding bin
 ### Development
 Please contact Mazdak Abulnaga, abulnaga@mit.edu.
 
-### Paper
-In progress.
+### Citing and Paper
+
+Please consider citing our [paper](https://arxiv.org/pdf/1903.05044.pdf)
+```
+@inproceedings{abulnaga2019placenta,
+title={Placental Flattening via Volumetric Parameterization},
+author={Abulnaga, S. Mazdak and Abaci Turk, Esra and Bessmeltsev, Mikhail and Grant, P. Ellen and Solomon, Justin and Golland, Polina},
+booktitle={Medical Image Computing and Computer Assisted Intervention -- MICCAI 2019},
+year={2019},
+pages={39--47},
+}
+```
