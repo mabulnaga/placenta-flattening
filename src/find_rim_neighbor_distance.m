@@ -1,4 +1,4 @@
-function [IDX, nNodes] = find_rim_neighbor_distance(A, P, clusterIDX, neighborDist, varargin)
+function [IDX, nNodes] = find_rim_neighbor_distance(A, P, clusterIDX, neighborDist, T)
 %Given a cluster of the placenta (2 cluster), finds the rim based on a
 %neighborhood distance of multiple nodes. Assumes that if there is a change
 %in cluster membership within node i's neighborhood, then node i will be
