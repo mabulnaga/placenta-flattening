@@ -1,7 +1,7 @@
 function [ startVolume, startVolumeNormalized, mappedVolume] = grad_descent_algo( X, T, lambda, rho, rz )
 %Mapping algorithm optimized using gradient descent. Parameterizes the
 %placenta by mapping to a flattened space
-%Inputs: 
+%Inputs:
 %       X: mesh vertices
 %       T: mesh triangulation
 %       lambda: regularization parameter
@@ -14,18 +14,23 @@ function [ startVolume, startVolumeNormalized, mappedVolume] = grad_descent_algo
 %       startVolumeNormalized: volumetric mesh of the placenta in the
 %       original image space, centered at 0 and rotated by moments of
 %       inertia
-%       mappedVolume: volumetric mesh of the placenta in the flattened space. 
+%       mappedVolume: volumetric mesh of the placenta in the flattened space.
 close all;
 %optimization parameters
 flattenMaternalOnly = 0;
 flattenMedialAxis = 0;
 medialAxisHeight = 1;
-numIterations =75001; 
+numIterations =75001;
 gradThresh = 1e-4;
 objThresh = 400;
 normThresh = 150;
 lineSearchLim = 200;
 useRim = 1;
+
+%parameters to govern when to start optimizing the template height
+rzStart = gradThresh/10;
+rzEnd = gradThresh;
+optimizationCounter = 2;
 
 %normalize and PCA
 if(size(X,2)>size(X,1))
@@ -114,89 +119,105 @@ XPTemp = X0P;
 XP = X0P;
 isStuck = 0;
 brokeLineSearch = 0;
-
+ignoreNodes = [];
 
 X = gpu_generate_tets(T, XPTemp);
 %Compute the gradient
 grad = gpu_compute_grad(X,T,lambda, Xvol, Oinv, OinvT, OTO);
 grad = gpu_compute_grad_rim(grad, XP, voronoiAreas, rz, binNorth, binSouth, binMap);
-gradNorms(ii) =gather(norm(grad,'fro'));
+gradNorm = norm(grad,'fro');
+gradNorms(ii) = norm(grad,'fro'); %prev. gather
 %Gradient descent
-while(norm(grad,'fro')>gradThresh && ii<numIterations && countFunc<objThresh && isStuck == 0 && brokeLineSearch == 0)
-    count = 0;
-    X = gpu_generate_tets(T, XPTemp);
-    distData = gpu_compute_distortion_rim(XP, voronoiAreas, rz, binNorth, binSouth, binMap);
-    origDist = gpu_compute_distortion(X, lambda, Xvol, Oinv);
-    origDist = origDist + distData;
-    
-    grad = gpu_compute_grad(X,T,lambda, Xvol, Oinv, OinvT, OTO);
-    grad = gpu_compute_grad_rim(grad, XP, voronoiAreas, rz, binNorth, binSouth, binMap);
-    if(ii == 1)
-        gradO = grad;
-    end
-    gradX = gpu_generate_tets(T,grad);
-    
-    %Compute step size to ensure injectivity
-    eta = real(gpu_compute_minT( X,gradX ));
-    eta = eta*0.9;
-    orig_eta =eta;
-    XPTemp = XP - eta*grad;
-    
-    %check if actually injective.
-    distVolume = compute_distortion_J(T, T, XP, XPTemp);
-    if(min(distVolume)<=0)
-        while( min(distVolume)<=0)
-            eta =  eta/10;
-            XPTemp = XP - eta*grad;
-            distVolume = compute_distortion_J(T, T, XP, XPTemp);
-        end
-    end
-    
-    X = gpu_generate_tets(T, XPTemp);
-    [distData, ~, ~] = gpu_compute_distortion_rim(XPTemp, voronoiAreas, rz, binNorth, binSouth, binMap);
-    [distJTemp, ~, ~] = gpu_compute_distortion(X, lambda, Xvol, Oinv);
-    distI = distJTemp + distData;
-    
-    gradNorms(ii) = gather(norm(grad,'fro'));
-    %Line Search
-    while(distI >= origDist)%+beta*eta*norm(grad,'fro'))
-        eta = eta*rho;
-        XPTemp = XP - eta*grad;
+for optimizationCounter = 1 : optimizationCount
+    while(gradNorm>gradThresh && ii<numIterations && countFunc<objThresh && isStuck == 0 && brokeLineSearch == 0)
+        count = 0;
         X = gpu_generate_tets(T, XPTemp);
-        [distData, ~,~] = gpu_compute_distortion_rim(XPTemp, voronoiAreas, rz, binNorth, binSouth, binMap);
-        [distJTemp,~,~] = gpu_compute_distortion(X, lambda, Xvol, Oinv);
+        distData = gpu_compute_distortion_rim(XP, voronoiAreas, rz, binNorth, binSouth, binMap);
+        origDist = gpu_compute_distortion(X, lambda, Xvol, Oinv);
+        origDist = origDist + distData;
+        
+        %compute the gradients
+        grad = gpu_compute_grad(X,T,lambda, Xvol, Oinv, OinvT, OTO);
+        [grad,~,~,grad_rz] = gpu_compute_grad_rim(grad, XP, voronoiAreas, rz, binNorth, binSouth, binMap);
+        grad(ignoreNodes,:) = 0;
+        gradNorm = norm(grad,'fro');
+        grad = grad/gradNorm;
+        gradX = gpu_generate_tets(T,grad);
+        
+        %Compute step size to ensure injectivity
+        eta = real(gpu_compute_minT( X,gradX ));
+        eta = eta*0.9;
+        orig_eta =eta;
+        
+        %set the step size for the height optimization
+        if(optimizationCounter > 1)
+            eta = min(eta,10);
+            eta_rz = eta;
+        else
+           eta_rz = 0; 
+        end
+        
+        %move by the gradient
+        XPTemp = XP - eta*grad;
+        rz_temp = rz - eta_rz*grad_rz;
+
+        
+        %check if actually injective.
+        distVolume = compute_distortion_J(T, T, XP, XPTemp);
+        if(min(distVolume)<=0)
+            while( min(distVolume)<=0)
+                eta =  eta/10;
+                XPTemp = XP - eta*grad;
+                distVolume = compute_distortion_J(T, T, XP, XPTemp);
+            end
+        end
+        
+        X = gpu_generate_tets(T, XPTemp);
+        [distData, ~, ~] = gpu_compute_distortion_rim(XPTemp, voronoiAreas, rz_temp, binNorth, binSouth, binMap);
+        [distJTemp, ~, ~] = gpu_compute_distortion(X, lambda, Xvol, Oinv);
         distI = distJTemp + distData;
-        count = count+1;
-        if(count>lineSearchLim)
-            brokeLineSearch = 1;
-            fprintf ('Iteration: %d,  grad: %d, obj: %d \n', ii, gradNorms(ii),distI)
-            fprintf('Took too many line search loops at iteration %d \n',ii);
-            break;
-        end        
-    end
-    ii = ii+1;
-    XP = XPTemp;
-    gradNorms(ii) = gather(norm(grad,'fro'));  
-    if(ii<100)
-        fprintf ('Iteration: %d, grad: %d, obj: %d \n', ii, gradNorms(ii),distI)
-        fprintf('\n')
-        %save([savePath,'/startVolume'],'startVolume','-v7.3');
-        %save([savePath,'/startVolumeNormalized'],'startVolumeNormalized','-v7.3');
-    end
-    if(mod(ii,100)==0)
-        fprintf ('It: %d, grad: %d, obj: %d \n', ii, gradNorms(ii),distI)
-        fprintf('\n')
-    end
-    if(abs(distI-origDist)<1e-6*lambda)
-        countFunc = countFunc+1;
-    else
-        countFunc = 0;
-    end
-    
-    if(eta < 1e-50)
-        isStuck = 1;
-        fprintf ('It: %d, Orig eta: %d, eta: %d, grad: %d, obj: %d \n', ii, orig_eta, eta, gradNorms(ii),distI)
-        break; %algorithm cannot move
+        
+        gradNorms(ii) = gradNorm;
+        %Line Search
+        while(distI >= origDist)%+beta*eta*norm(grad,'fro'))
+            eta = eta*rho;
+            eta_rz = eta_rz*rho;
+            XPTemp = XP - eta*grad;
+            rz_temp = rz - eta_rz * grad_rz;
+            X = gpu_generate_tets(T, XPTemp);
+            [distData, ~,~] = gpu_compute_distortion_rim(XPTemp, voronoiAreas, rz_temp, binNorth, binSouth, binMap);
+            [distJTemp,~,~] = gpu_compute_distortion(X, lambda, Xvol, Oinv);
+            distI = distJTemp + distData;
+            count = count+1;
+            if(count>lineSearchLim)
+                brokeLineSearch = 1;
+                fprintf ('Iteration: %d,  grad: %d, obj: %d \n', ii, gradNorms(ii),distI)
+                fprintf('Took too many line search loops at iteration %d \n',ii);
+                break;
+            end
+        end
+        ii = ii+1;
+        XP = XPTemp;
+        gradNorms(ii) = gradNorm;
+        if(ii<100)
+            fprintf ('Iteration: %d, grad: %d, obj: %d \n', ii, gradNorms(ii),distI)
+            fprintf('\n')
+        end
+        if(mod(ii,100)==0)
+            fprintf ('It: %d, grad: %d, obj: %d \n', ii, gradNorms(ii),distI)
+            fprintf('\n')
+        end
+        if(abs(distI-origDist)<1e-6*lambda)
+            countFunc = countFunc+1;
+        else
+            countFunc = 0;
+        end
+        
+        if(eta < 1e-50)
+            isStuck = 1;
+            fprintf ('It: %d, Orig eta: %d, eta: %d, grad: %d, obj: %d \n', ii, orig_eta, eta, gradNorms(ii),distI)
+            break; %algorithm cannot move
+        end
     end
 end
 %% Output data

@@ -17,12 +17,12 @@ southPts = P(binMap(southHem),:);
 southAreas = surfaceScale(southHem);
 
 northDist = (northPts(:,3) - rz).^2;
-rimDistDistribution(northHem) = gather(northDist.^(1/2)); %need to be positive
+rimDistDistribution(northHem) = northDist.^(1/2); %need to be positive
 northDist = northDist.*northAreas;
 northDistSum = sum(northDist);
 
 southDist = (southPts(:,3) + rz).^2;
-rimDistDistribution(southHem) = gather(southDist.^(1/2));
+rimDistDistribution(southHem) = southDist.^(1/2);
 southDist = southDist.*southAreas;
 southDistSum = sum(southDist);
 
@@ -30,7 +30,7 @@ rimDist = southDistSum + northDistSum;
 
 allHems = [northHem, southHem];
 [maxDist, maxDistInd] = max([northDist;southDist]);
-maxDist = gather(maxDist);
+maxDist = maxDist;
 maxDistInd = binMap(allHems(maxDistInd));
 
 rimDistMax = [maxDist;maxDistInd];

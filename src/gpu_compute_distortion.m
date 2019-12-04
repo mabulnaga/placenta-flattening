@@ -48,6 +48,6 @@ distJnode = scaledD;
 %for statistics, also output the worst case ones for the data distortion
 %and regularization distortiton
 [distJMax, distJMaxInd] = max(scaledD);
-distJMax = gather([distJMax; distJMaxInd]);
+distJMax = [distJMax; distJMaxInd];
 end
 
