@@ -14,6 +14,11 @@ function [ r ] = gpu_compute_minT( X,gradX )
   B = pagefun(@mtimes,gradX,D);
   A = pagefun(@transpose,A);
   B = pagefun(@transpose, B);
+  
+  %need to move these to CPU for complex arithmetic.
+  A = gather(A);
+  B = gather(B); 
+  
   a11 = A(1,1,:);a12 =A(1,2,:);a13 = A(1,3,:);a21 = A(2,1,:);a22 = A(2,2,:); 
   a23= A(2,3,:); a31 = A(3,1,:); a32 = A(3,2,:); a33= A(3,3,:);
   b11 = B(1,1,:);b12 =B(1,2,:);b13 = B(1,3,:);b21 = B(2,1,:);b22 = B(2,2,:); 
@@ -24,7 +29,9 @@ function [ r ] = gpu_compute_minT( X,gradX )
   c = (-(a23.*a32.*b11) + a22.*a33.*b11 + a23.*a31.*b12 - a21.*a33.*b12 - a22.*a31.*b13 + a21.*a32.*b13 + a13.*a32.*b21 - a12.*a33.*b21 - a13.*a31.*b22 + a11.*a33.*b22 + a12.*a31.*b23 - a11.*a32.*b23 - a13.*a22.*b31 + a12.*a23.*b31 + a13.*a21.*b32 - a11.*a23.*b32 - a12.*a21.*b33 + a11.*a22.*b33);
   a = (-(b13.*b22.*b31) + b12.*b23.*b31 + b13.*b21.*b32 - b11.*b23.*b32 - b12.*b21.*b33 + b11.*b22.*b33);
   b = (-(a33.*b12.*b21) + a32.*b13.*b21 + a33.*b11.*b22 - a31.*b13.*b22 - a32.*b11.*b23 + a31.*b12.*b23 + a23.*b12.*b31 - a22.*b13.*b31 - a13.*b22.*b31 + a12.*b23.*b31 - a23.*b11.*b32 + a21.*b13.*b32 + a13.*b21.*b32 - a11.*b23.*b32 + a22.*b11.*b33 - a21.*b12.*b33 - a12.*b21.*b33 + a11.*b22.*b33);
-
+  
+  a = -1*a;
+  c = -1*c;
 
   disc = 18*a.*b.*c.*d - 4*b.^3.*d +b.^2.*c.^2 -4*a.*c.^3 - 27*a.^2.*d.^2;
   delta0 = b.^2 - 3*a.*c;

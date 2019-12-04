@@ -1,4 +1,4 @@
-function [ startVolume, startVolumeNormalized, mappedVolume] = grad_descent_algo( X, T, lambda, rho, rz )
+function [ startVolume, startVolumeNormalized, mappedVolume] = grad_descent_algo( X, T, lambda, rho, rz, relaxFetal )
 %Mapping algorithm optimized using gradient descent. Parameterizes the
 %placenta by mapping to a flattened space
 %Inputs:
@@ -7,7 +7,7 @@ function [ startVolume, startVolumeNormalized, mappedVolume] = grad_descent_algo
 %       lambda: regularization parameter
 %       rho: line search descent factor
 %       rz: template half-height
-%       savePath: location to save output files
+%       relaxFetal: flag to relax the fetal side after convergence
 %Outputs:
 %       startVolume: volumetric mesh of the placenta in the original image
 %           space
@@ -30,7 +30,7 @@ useRim = 1;
 %parameters to govern when to start optimizing the template height
 rzStart = gradThresh/10;
 rzEnd = gradThresh;
-optimizationCounter = 2;
+optimizationCount = 2;
 
 %normalize and PCA
 if(size(X,2)>size(X,1))
@@ -105,7 +105,7 @@ L = L+nullSpaceBasis'*nullSpaceBasis;
 AcotL = chol(L);
 
 %% Gradient Descent
-gradNorms = zeros(1,numIterations);
+gradNorms = zeros(1,numIterations,'gpuArray');
 countFunc = 0;
 countNormFunc = 0;
 ii=1;
@@ -126,7 +126,7 @@ X = gpu_generate_tets(T, XPTemp);
 grad = gpu_compute_grad(X,T,lambda, Xvol, Oinv, OinvT, OTO);
 grad = gpu_compute_grad_rim(grad, XP, voronoiAreas, rz, binNorth, binSouth, binMap);
 gradNorm = norm(grad,'fro');
-gradNorms(ii) = norm(grad,'fro'); %prev. gather
+gradNorms(ii) = gradNorm; %prev. gather
 %Gradient descent
 for optimizationCounter = 1 : optimizationCount
     while(gradNorm>gradThresh && ii<numIterations && countFunc<objThresh && isStuck == 0 && brokeLineSearch == 0)
@@ -197,8 +197,12 @@ for optimizationCounter = 1 : optimizationCount
             end
         end
         ii = ii+1;
-        XP = XPTemp;
         gradNorms(ii) = gradNorm;
+        
+        %store the new vertex, rz locations.
+        XP = XPTemp;
+        rz = rz_temp;
+        
         if(ii<100)
             fprintf ('Iteration: %d, grad: %d, obj: %d \n', ii, gradNorms(ii),distI)
             fprintf('\n')

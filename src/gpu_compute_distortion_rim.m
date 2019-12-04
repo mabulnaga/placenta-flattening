@@ -10,7 +10,7 @@ if(isempty(northHem) && isempty(southHem))
    rimDistDistribution = zeros(size(binMap));
    return
 end
-rimDistDistribution = NaN*ones(length(surfaceScale),1);
+rimDistDistribution = NaN*ones(length(surfaceScale),1,'gpuArray');
 northPts = P(binMap(northHem),:);
 northAreas = surfaceScale(northHem);
 southPts = P(binMap(southHem),:);
