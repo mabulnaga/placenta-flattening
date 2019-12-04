@@ -15,6 +15,9 @@ function [mappedImage] = main(grayImage, segmentationImage, varargin)
 %       varargin:
 %               1. savePath. Specify a full path to save the output to. If
 %               left empty or unspecified, by default will create a folder outputs/ and save there.
+%               2. relax fetal side: flag to indicate whether to relax the
+%               fetal side of the placenta after optimization (1) or not
+%               (0). Default: 0.
 %Outputs:
 %       mappedImage: the mapped MRI image to the flattened space (matrix).
 %       Output is a NIFTI file if the inputs were NIFTI files.
@@ -24,7 +27,8 @@ lambda = 1;
 rho = 1/2;
 saveNifti = 0;
 %Load in images and check if they are NIFTI files
-
+relaxFetal = 0;
+meshParams = [2, 25];
 
 if(ischar(grayImage))
     try
@@ -55,7 +59,13 @@ end
 %create a directory to save output files to
 currentDir = mfilename('fullpath');
 currentDir = fileparts(currentDir); currentDir = fileparts(currentDir);
-if(~isempty(varargin))
+if(nargin>2)
+    if(nargin == 4)
+        relaxFetal = varargin{2};
+        if(relaxFetal~=0)
+            relaxFetal = 1;
+        end
+    end
     savePath = varargin{1};
     try
         mkdir(savePath)
@@ -81,7 +91,7 @@ else
 end
 
 %mapping to the flattened space
-[startVolume, ~, mappedVolume] = flatten_algorithm(segmentationImage, lambda, rho);
+[startVolume, ~, mappedVolume] = flatten_algorithm(segmentationImage, lambda, rho, relaxFetal, meshParams);
 
 %saving the mapped meshes
 fprintf('Flattening complete, saving meshes to %s \n', savePath);
