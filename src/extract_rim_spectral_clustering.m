@@ -1,13 +1,16 @@
 function [binRim, binNorth, binSouth, binNorthNoRim, binSouthNoRim, numConMain, numConRim ] = extract_rim_spectral_clustering(T,P,varargin)
 %function to extract the indices of the rim and separate the mesh into
-%north and south hemispheres. INCOMPLETE
+%north and south hemispheres.
 %Inputs:
 %   T: surface mesh triangulation
 %   P: surface mesh points (must correspond to unique(T))
 %   varargin: 
 %           nNeighbor: nNeighbor-ring neighborhood to use in spectral
-%           clustering 
-%           n: length of implicit integration
+%           clustering. Default: 4 
+%           lambda: scaling parameter on spectral clustering weight.
+%           Default: 20
+%           rimDist: shortest-path distance (voxels) to grow rim width.
+%           Default: 6
 %           thresh: threshold for meancurvature extraction. default is 0.1
 %Outputs:
 %   binRim: indices corresponding to vertices in X that are labeled as rim.
@@ -19,17 +22,33 @@ function [binRim, binNorth, binSouth, binNorthNoRim, binSouthNoRim, numConMain, 
 %   placenta
 %   numConRim: number of connected components in the rim
 %   idxDil: 1 for nodes that exceed mean curvature threshold, 0 o.w.
-%TO-DO: make sure we get 1 rim connected component, 2 main connected
-%components. Not sure how to enforce this programatically.
 
 nCluster = 2;
 eigFunc = 2;
 nNeighbor = 3;
-rimDist = 6; %6 voxel neighborhood for rim
+rimDist = 5; %5 voxel neighborhood for rim
+lambda = 20;
+
+if( nargin == 3)
+    nNeighbor = varargin{1};
+elseif( nargin == 4)
+    nNeighbor = varargin{1};
+    lambda = varargin{2};
+elseif( nargin == 5)
+    nNeighbor = varargin{1};
+    lambda = varargin{2};
+    rimDist = varargin{3};
+end
+
 A = adjacency_matrix(T);
 Ann = compute_knn_graph(A,nNeighbor);
+
+%approximate geodesic distance between neighbors
+D = compute_geodesic_distance_approximate(P,T,1:length(P));
+D = D/max(D(find(Ann)));
+
 %compute similarity metric
-W = compute_mean_curvature_neighbors(P,Ann,T,20);
+W = compute_mean_curvature_neighbors(P,Ann,T,lambda,D);
 %cluster in 2 
 IDX = spectral_cluster_maternal_fetal(W);
 binNorthNoRim = find(IDX==1)';
@@ -37,9 +56,6 @@ binSouthNoRim = find(IDX==2)';
 %find rim using closest neighbors based on (approximate) geodesic distance
 
 %find the rim
-% v = find_rim_from_2_cluster(compute_knn_graph(adjacency_matrix(T),2),IDX);
-% IDX2 = IDX;
-% IDX2(v==1) = 3;
 IDX2 = find_rim_neighbor_distance(A,P,IDX,rimDist,T);
 Arim = adjacency_matrix_per_label(A, IDX2,3);
 Grim = graph(Arim);
