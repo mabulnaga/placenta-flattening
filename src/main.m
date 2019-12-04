@@ -18,6 +18,10 @@ function [mappedImage] = main(grayImage, segmentationImage, varargin)
 %               2. relax fetal side: flag to indicate whether to relax the
 %               fetal side of the placenta after optimization (1) or not
 %               (0). Default: 0.
+%               3: meshParams. vector with 2 elements containing the
+%               meshing granularity parameters. See iso2mesh documentation
+%               for additional details. Default: [2,25]. Smaller parameters
+%               lead to more fine meshes.
 %Outputs:
 %       mappedImage: the mapped MRI image to the flattened space (matrix).
 %       Output is a NIFTI file if the inputs were NIFTI files.
@@ -29,6 +33,17 @@ saveNifti = 0;
 %Load in images and check if they are NIFTI files
 relaxFetal = 0;
 meshParams = [2, 25];
+
+if(nargin == 4)
+    relaxFetal = varargin{2};
+    if(relaxFetal~=0)
+        relaxFetal = 1;
+    end
+end
+if(nargin == 5)
+    meshParams = varargin{3};
+end
+    
 
 if(ischar(grayImage))
     try
@@ -60,12 +75,6 @@ end
 currentDir = mfilename('fullpath');
 currentDir = fileparts(currentDir); currentDir = fileparts(currentDir);
 if(nargin>2)
-    if(nargin == 4)
-        relaxFetal = varargin{2};
-        if(relaxFetal~=0)
-            relaxFetal = 1;
-        end
-    end
     savePath = varargin{1};
     try
         mkdir(savePath)
