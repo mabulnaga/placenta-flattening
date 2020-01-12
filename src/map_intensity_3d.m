@@ -1,31 +1,52 @@
-function [ resultImg, Tflat ] = map_intensity_3d( origImg,origMesh, finalMesh )
+function [ resultImg, Tflat ] = map_intensity_3d( origImg,origMesh, finalMesh, varargin )
 %map_intensity_3d: maps the image intensities from the original image space
 %to a transformed image space. Pulls intensities using barycentric
 %coordinates and trilinear interpolation.
 %   Input: origImage: voxel-image with grayscale intensity values
 %          origMesh: triangulation mesh
 %          finalMesh: triangulation of mesh after transformation
+%           varargin: if wanting to force an output image size, place that
+%           here.
 %   Output: resultImage: voxel-image, same dimension as origImage, that has
 %           the grayscale intensity values mapped according to the mesh's
 %           transformation. 
 %           Tflat: map of where each voxel in the flattened image came from.
 
 D = [1 0 0;0 1 0;0 0 1; -1 -1 -1];
-meanCoords = mean(origMesh.Points); %later, do mean subtraction and then add the 
+resultImg = zeros(size(origImg)); 
+
 %original image center as your mean!
 meshPts = finalMesh.Points ;
-meshPts = meshPts - mean(meshPts);
 range = max(meshPts) - min(meshPts);
-imgSize = ceil(range + [30,30,10]);
-meshPts = meshPts + imgSize/2;
-%meshPts = meshPts - mean(meshPts);
-%meshPts = meshPts + meanCoords;
+%output image size
+if(~isempty(varargin))
+    imgSize = varargin{1};
+else
+    imgSize = size(origImg);
+    %imgSize = ceil(range + [30,30,10]);
+end
+%meshPts = meshPts + imgSize/2;
+if(sum(min(meshPts)<1)>0) %start at 1, but care about negatives.
+    for i = 1:3
+        if(min(meshPts(:,i))<1)
+            meshPts(:,i) = meshPts(:,i) - min(meshPts(:,i))+5; %prev + 1. Made +5 so its not at the bottom of image
+        end
+    end
+end
+%check if mesh goes outside image boundaries.
+if(sum((max(meshPts) - imgSize)>-1)>0)
+    diff = ceil(max(meshPts) - imgSize +2);
+    for i = 1:3
+        if(diff(i) > 0)
+            imgSize(i) = imgSize(i) + diff(i);
+        end
+    end
+end
+
+
 finalMesh = triangulation(finalMesh.ConnectivityList,meshPts);
- maxCoords = max(finalMesh.Points);
- minCoords = min(finalMesh.Points);
- %imgSize = round(maxCoords - minCoords)+20;
- resultImg = zeros(imgSize);
- Tflat = zeros([size(resultImg),3]);
+resultImg = zeros(imgSize);
+Tflat = zeros([size(resultImg),3]);
 %generate coordinates
 [xx,yy,zz] = meshgrid(0:size(resultImg,1),0:size(resultImg,2),0:size(resultImg,3));
 xxVoxels = xx(1:end-1,1:end-1,1:end-1)+0.5;
