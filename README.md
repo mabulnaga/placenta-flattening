@@ -12,7 +12,7 @@ A MATLAB algorithm for volumetric mesh parameterization. Developed for mapping a
 Add the MATLAB packages to the working path.
 
 ### Usage
-main(grayImage, segImage): input a grayscale MRI image and the corresponding binary segmentation, where voxels labeled '1' correspond to the placenta. The inputs grayImage, segImage can either be full path locations of NIFTI image files, or image matrices. The script outputs the flattened meshes and images containing the mapped intensities.
+main(grayImage, segImage): input a grayscale MRI image and the corresponding binary segmentation, where voxels labeled '1' correspond to the placenta. The inputs grayImage, segImage can either be full path locations of NIFTI image files, or image matrices. The grayImage input can be a 3D MRI volume, or a 4D series of MRI volumes. The script outputs the flattened meshes and images containing the mapped intensities.
 
 ### Development
 Please contact Mazdak Abulnaga, abulnaga@mit.edu.
