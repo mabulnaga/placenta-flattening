@@ -21,15 +21,15 @@ flattenMaternalOnly = 0;
 flattenMedialAxis = 0;
 medialAxisHeight = 1;
 numIterations =75001;
-gradThresh = 1e-4;
+gradThreshold = 1e-4;
 objThresh = 400;
 normThresh = 150;
 lineSearchLim = 200;
 useRim = 1;
 
 %parameters to govern when to start optimizing the template height
-rzStart = gradThresh/10;
-rzEnd = gradThresh;
+gradThresh = gradThreshold*10;
+gradRzEnd = gradThreshold;
 optimizationCount = 2;
 
 %normalize and PCA
@@ -129,6 +129,18 @@ gradNorm = norm(grad,'fro');
 gradNorms(ii) = gradNorm; %prev. gather
 %Gradient descent
 for optimizationCounter = 1 : optimizationCount
+    %reinitialize variables
+    brokeLineSearch = 0;
+    countFunc = 0;
+    countNormFunc = 0;
+    isStuck = 0;
+    if(ii >= numIterations)
+        numIterations = numIterations + 1000;
+    end
+    %increase the gradient constraint when optimizing template height
+    if(optimizationCounter == 2)
+       gradThresh = gradRzEnd;
+    end
     while(gradNorm>gradThresh && ii<numIterations && countFunc<objThresh && isStuck == 0 && brokeLineSearch == 0)
         count = 0;
         X = gpu_generate_tets(T, XPTemp);
