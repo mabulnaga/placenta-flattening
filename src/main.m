@@ -5,6 +5,9 @@ function [mappedImage] = main(grayImage, segmentationImage, varargin)
 %and maps it to the flattened space. The mapping produces a flattened mesh
 %and a transformed grayscale image. This script will also produce a blank NIFTI
 %image with the transformed output (binary and grayscale).
+%Anisotropic support: currently, anistropic support is in beta. The code
+%   will read the image spacing information from the nifti header, and if
+%   anisotropic, will scale the mesh appropriately.
 %Note that the output will only be a NIFTI file if the inputs are NIFTI
 %files.
 %Inputs:
@@ -33,6 +36,8 @@ saveNifti = 0;
 %Load in images and check if they are NIFTI files
 relaxFetal = 0;
 meshParams = [2, 25];
+isotropic = 1;
+img_spacing = [1,1,1];
 
 if(nargin == 4)
     relaxFetal = varargin{2};
@@ -59,6 +64,12 @@ if(ischar(segmentationImage))
         segmentationImageNifti = loadNii(segmentationImage);
         segmentationImage = segmentationImageNifti.img;
         segmentationImage = preprocess_seg_holes(segmentationImage);
+        %check if image is anisotropic
+        img_spacing = segmentationImageNifti.hdr.dime.pixdim(2:4);
+        if(length(unique(img_spacing))>1)
+            isotropic = 0;
+            img_spacing_mat = diag(img_spacing);
+        end
     catch
         error('invalid nifti file specified');
     end
@@ -100,14 +111,26 @@ else
 end
 
 %mapping to the flattened space
-[startVolume, ~, mappedVolume] = flatten_algorithm(segmentationImage, lambda, rho, relaxFetal, meshParams);
+if(isotropic == 0)
+    [startVolume, ~, mappedVolume] = flatten_algorithm(segmentationImage, lambda, rho, relaxFetal, meshParams, img_spacing_mat);
+else
+    [startVolume, ~, mappedVolume] = flatten_algorithm(segmentationImage, lambda, rho, relaxFetal, meshParams);
+end
 
+%Save the mapped meshes. Rescale back to the voxel space for the anisotropic version.
+if(isotropic == 0)
+   X = startVolume.Points;
+   X = X * inv(img_spacing_mat);
+   startVolume = triangulation(startVolume.ConnectivityList, X);
+   X = mappedVolume.Points;
+   X = X* inv(img_spacing_mat);
+   mappedVolume = triangulation(mappedVolume.ConnectivityList, X); 
+end
 %saving the mapped meshes
 fprintf('Flattening complete, saving meshes to %s \n', savePath);
 save([savePath,'/startVolume'],'startVolume','-v7.3');
 save([savePath,'/mappedVolume'],'mappedVolume','-v7.3');
 fprintf('Mapping MRI image to flattened space...\n');
-
 
 %map the MRI intensity values to the flattened space 
 dims = size(grayImage);
@@ -127,7 +150,7 @@ if(saveNifti==1)
     fprintf('saving mapped image as a NIFTI file \n');
     grayImageNifti = update_nifti(grayImageNifti, mappedImage);
     segMapped = zeros(size(mappedImage)); 
-    segMapped(mappedImage > 0) = mappedImage(mappedImage>0);   
+    segMapped(mappedImage > 0) = 1;   
     segImageNifti = update_nifti(grayImageNifti, segMapped);
     saveNii(grayImageNifti, [savePath,'flat-MRI.nii']);
     saveNii(segImageNifti,[savePath,'flat-segmentation.nii']);
@@ -137,7 +160,7 @@ else
     fprintf('saving mapped image as a matlab matrix file');
     save([savePath,'flat-MRI.mat'],'mappedImage','-v7.3');
     segMapped = zeros(size(mappedImage)); 
-    segMapped(mappedImage > 0) = mappedImage(mappedImage>0);
+    segMapped(mappedImage > 0) = 1;
     save([savePath,'flat-segmentation.mat'],'segMapped','-v7.3');
     niftiwrite(mappedImage,[savePath,'flat-MRI.nii']);
     niftiwrite(segMapped,[savePath,'flat-segmentation.nii']);
