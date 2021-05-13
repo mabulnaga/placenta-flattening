@@ -127,7 +127,7 @@ if(saveNifti==1)
     fprintf('saving mapped image as a NIFTI file \n');
     grayImageNifti = update_nifti(grayImageNifti, mappedImage);
     segMapped = zeros(size(mappedImage)); 
-    segMapped(mappedImage > 0) = mappedImage(mappedImage>0);   
+    segMapped(mappedImage > 0) = 1;   
     segImageNifti = update_nifti(grayImageNifti, segMapped);
     saveNii(grayImageNifti, [savePath,'flat-MRI.nii']);
     saveNii(segImageNifti,[savePath,'flat-segmentation.nii']);
@@ -137,7 +137,7 @@ else
     fprintf('saving mapped image as a matlab matrix file');
     save([savePath,'flat-MRI.mat'],'mappedImage','-v7.3');
     segMapped = zeros(size(mappedImage)); 
-    segMapped(mappedImage > 0) = mappedImage(mappedImage>0);
+    segMapped(mappedImage > 0) = 1;
     save([savePath,'flat-segmentation.mat'],'segMapped','-v7.3');
     niftiwrite(mappedImage,[savePath,'flat-MRI.nii']);
     niftiwrite(segMapped,[savePath,'flat-segmentation.nii']);
