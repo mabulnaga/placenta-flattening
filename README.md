@@ -18,8 +18,22 @@ main(grayImage, segImage): input a grayscale MRI image and the corresponding bin
 Please contact Mazdak Abulnaga, abulnaga@mit.edu.
 
 ### Citing and Paper
+If you use this method or some parts of the code, please consider citing one of our papers. 
 
-Please consider citing our [paper](https://arxiv.org/pdf/1903.05044.pdf)
+Our journal paper develops additional template models and provides extensions to improve robustness, an expanded evaluation on a significantly larger dataset, and experiments demonstrating utility for clinical research. [eprint arXiV:2111.07900](https://arxiv.org/abs/2111.07900)
+```
+@ARTICLE{abulnaga2021placenta,
+  author={Abulnaga, S. Mazdak and Abaci Turk, Esra and Bessmeltsev, Mikhail and Grant, P. Ellen and Solomon, Justin and Golland, Polina},
+  journal={IEEE Transactions on Medical Imaging}, 
+  title={Volumetric Parameterization of the Placenta to a Flattened Template}, 
+  year={2021},
+  volume={},
+  number={},
+  pages={1-1},
+  doi={10.1109/TMI.2021.3128743}}
+```
+
+The MICCAI conference paper develops the parallel planes template and validates on a smaller dataset. [eprint arXiV:1903.05044](https://arxiv.org/abs/1903.05044)
 ```
 @inproceedings{abulnaga2019placenta,
 title={Placental Flattening via Volumetric Parameterization},
