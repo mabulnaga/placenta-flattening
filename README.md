@@ -1,6 +1,8 @@
 # placenta-flattening
 A MATLAB algorithm for volumetric mesh parameterization. Developed for mapping a placenta segmentation derived from an MRI image to a flattened template for visualization. The code can work on NIFTI images or MATLAB matrices containing imaging information.
 
+![alt text](https://github.com/mabulnaga/placenta-flattening/blob/master/flattening_flowchart.png)
+
 ### Requirements
 - MATLAB
 - GPU with CUDA compute capability
