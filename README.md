@@ -4,7 +4,7 @@ A MATLAB algorithm for volumetric mesh parameterization. Developed for mapping a
 ![alt text](https://github.com/mabulnaga/placenta-flattening/blob/master/flattening_flowchart.png)
 
 ### Requirements
-- MATLAB
+- MATLAB [![View placenta-flattening on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/114395-placenta-flattening)
 - GPU with CUDA compute capability
 - MATLAB Packages:
     - [iso2mesh](http://iso2mesh.sourceforge.net/cgi-bin/index.cgi?Download): mesh generating toolbox
