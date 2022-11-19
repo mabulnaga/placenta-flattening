@@ -24,14 +24,14 @@ If you use this method or some parts of the code, please consider citing one of 
 
 Our journal paper develops additional template models and provides extensions to improve robustness, an expanded evaluation on a significantly larger dataset, and experiments demonstrating utility for clinical research. [eprint arXiV:2111.07900](https://arxiv.org/abs/2111.07900)
 ```
-@ARTICLE{abulnaga2021placenta,
+@ARTICLE{abulnaga2022placenta,
   author={Abulnaga, S. Mazdak and Abaci Turk, Esra and Bessmeltsev, Mikhail and Grant, P. Ellen and Solomon, Justin and Golland, Polina},
   journal={IEEE Transactions on Medical Imaging}, 
   title={Volumetric Parameterization of the Placenta to a Flattened Template}, 
-  year={2021},
-  volume={},
-  number={},
-  pages={1-1},
+  year={2022},
+  volume={41},
+  number={4},
+  pages={925-936},
   doi={10.1109/TMI.2021.3128743}}
 ```
 
