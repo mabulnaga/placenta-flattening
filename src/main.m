@@ -110,15 +110,7 @@ fprintf('Mapping MRI image to flattened space...\n');
 
 
 %map the MRI intensity values to the flattened space 
-dims = size(grayImage);
-if length(dims)==3 || dims(4)==1 %image is 3D or 4th dimension is singular
-    [mappedImage, Tflat] = map_intensity_3d(double(grayImage), startVolume, mappedVolume);
-elseif dims(4)>1 %image is 4D - map the intesity values by looping over volumes
-    mappedImage = zeros(dims);
-    for i=1:dims(4) 
-        [mappedImage(:,:,:,i), Tflat] = map_intensity_3d(double(grayImage(:,:,:,i)), startVolume, mappedVolume);
-    end         
-end
+mappedImage = map_MRI_intensity(startVolume, mappedVolume, grayImage);
 
 
 %save the mapped images as NIFTI files if NIFTI files were input to the
