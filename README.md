@@ -15,8 +15,10 @@ Add the MATLAB packages to the working path.
 
 ### Usage
 ```[startVolume, mappedVolume, mappedImage] = main(grayImage, segImage)```
-grayImage: grayscale MRI image. Input can be a 3D MRI volume, or a 4D series of MRI volumes. 
-segImage: 3D binary segmentation image, where voxels labeled '1' correspond to the placenta.
+
+- grayImage: grayscale MRI image. Input can be a 3D MRI volume, or a 4D series of MRI volumes. 
+
+- segImage: 3D binary segmentation image, where voxels labeled '1' correspond to the placenta.
 
 Either input can be a full path location of NIFTI image files, or matrices. 
 
