@@ -14,7 +14,19 @@ A MATLAB algorithm for volumetric mesh parameterization. Developed for mapping a
 Add the MATLAB packages to the working path.
 
 ### Usage
-main(grayImage, segImage): input a grayscale MRI image and the corresponding binary segmentation, where voxels labeled '1' correspond to the placenta. The inputs grayImage, segImage can either be full path locations of NIFTI image files, or image matrices. The grayImage input can be a 3D MRI volume, or a 4D series of MRI volumes. The script outputs the flattened meshes and images containing the mapped intensities.
+```[startVolume, mappedVolume, mappedImage] = main(grayImage, segImage)```
+grayImage: grayscale MRI image. Input can be a 3D MRI volume, or a 4D series of MRI volumes. 
+segImage: 3D binary segmentation image, where voxels labeled '1' correspond to the placenta.
+
+Either input can be a full path location of NIFTI image files, or matrices. 
+
+The script outputs the source mesh (startVolume), the flattened meshe (mappedVolume), and an MRI image containing the mapped intensities (mappedImage).
+
+If you have multiple sources of MRI data corresponding to the same placenta segmentation, you can map each of these individually to the flattened space running the command:
+
+``` [mappedImage] = map_MRI_intensity(startVolume, mappedVolume, mriImage) ```
+
+mriImage is a 3D or 4D matrix containing MRI signals to be mapped to the flattened space.
 
 ### Development
 Please contact Mazdak Abulnaga, abulnaga@mit.edu.
