@@ -1,4 +1,4 @@
-function [mappedImage] = main(grayImage, segmentationImage, varargin)
+function [startVolume, mappedVolume, mappedImage] = main(grayImage, segmentationImage, varargin)
 %Main function to call placenta parameterization code. Takes as input a
 %gray MRI image (ex: BOLD, HASTE, etc...), either as a 3D image file (a
 %matrix), or as a NIFTI file, and the corresponding placenta segmentation
