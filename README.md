@@ -20,7 +20,7 @@ Add the MATLAB packages to the working path.
 
 - segImage: 3D binary segmentation image, where voxels labeled '1' correspond to the placenta.
 
-Either input can be a full path location for each NIFTI image files, or matrices. 
+Either input can be a full path location pointing to the NIFTI image files, or matrices. 
 
 The script outputs the source mesh (startVolume), the flattened mesh (mappedVolume), and an MRI image containing the mapped intensities (mappedImage).
 
