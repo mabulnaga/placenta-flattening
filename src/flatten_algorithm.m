@@ -1,11 +1,11 @@
-function [ startVolume,startVolumeNormalized,mappedVol] = flatten_algorithm( binaryImg, lambda, rho, relaxFetal, meshParams)
+function [ startVolume,startVolumeNormalized,mappedVol] = flatten_algorithm( segmentationMask, lambda, rho, relaxFetal, meshParams)
 %Flattening Parameterization algorithm.
 %Takes as input the placenta segmentation and returns the flattened mesh.
 %Outputs the starting mesh generated from the segmentation, and the mesh in
 %the flattened space. Both are needed to map MRI intensity values to the
 %flattened template.
 %Inputs:
-%       binaryImage: binary matrix containing the segmentation of the placenta
+%       segmentationMask: binary matrix containing the segmentation of the placenta
 %       lambda: regularization parameter governing the tradeoff between
 %       template fit and shape distortion
 %       rho: line search descent parameter
@@ -23,22 +23,15 @@ function [ startVolume,startVolumeNormalized,mappedVol] = flatten_algorithm( bin
 
 %Smoothing parameter
 gaussSigma = 1.5;
-% Algorithm
+% dilation parameter
+dilateNum = 3;
+% smooth and dilate the mask
+segmentationMask = smooth_segmentation(segmentationMask, dilateNum, gaussSigma);
 %Estimate the placenta thickness
-surfaceVoxels = binaryImg - imerode(binaryImg, true(3));
-distTX = bwdist(surfaceVoxels);
-distTX(find(binaryImg == 0)) = -1;
-distTX_use = distTX(distTX > 0);
-hist_95 = prctile(distTX_use, 95);
-rz = hist_95;
-%Smooth the image
-try
-    binaryImg = imgaussfilt3(binaryImg,gaussSigma);
-catch
-    binaryImg = imgaussfilt3(uint8(binaryImg),gaussSigma);
-end
+rz = estimate_placenta_thickness(segmentationMask);
+
 %Create a mesh
-[node,elem] = create_mesh(binaryImg,meshParams(1),meshParams(2));
+[node,elem] = create_mesh(segmentationMask,meshParams(1),meshParams(2));
 V = elem(:,1:4);
 X = node;
 V = preprocess_flipVolume(V, X);
